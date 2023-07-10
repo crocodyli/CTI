@@ -11,5 +11,5 @@ O resultado trará retorno como:
 Score malicioso e outros detalhes da amostra na qual são fornecidos pelo Vírus Total! 
 
 Mais informações poderão ser encontradas através do Link do artigo no Medium: 
-
+https://medium.com/@barquetacaique/consultas-automatizada-v%C3%ADrus-total-com-lote-de-hash-md5-sha1-e-sha256-bbe24693293 
 
