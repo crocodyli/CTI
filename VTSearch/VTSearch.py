@@ -113,7 +113,6 @@ try:
         path = Path(args.output)
         ext = path.suffix
         ext = ext.replace(".", "", -1)
-        print(ext)
         if ext != "json" and ext != "txt":
             print("Extensão de arquivo inválida. O arquivo não foi salvo.")
             exit()
