@@ -13,3 +13,7 @@ Score malicioso e outros detalhes da amostra na qual são fornecidos pelo Vírus
 Mais informações poderão ser encontradas através do Link do artigo no Medium: 
 https://medium.com/@barquetacaique/consultas-automatizada-v%C3%ADrus-total-com-lote-de-hash-md5-sha1-e-sha256-bbe24693293 
 
+
+Agradecimentos ao:
+Felipe Bueno (realizou atualizações no código do script) 
+(https://www.linkedin.com/in/felipe-bueno-86002115a/) 
