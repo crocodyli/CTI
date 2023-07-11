@@ -1,11 +1,10 @@
 import requests
 import json
 import time
+import argparse
+from pathlib import Path
 
 def consultar_virustotal(hash):
-    # Insira sua chave de API do VirusTotal aqui
-    api_key = 'XXXXX'
-
     url = f'https://www.virustotal.com/api/v3/files/{hash}'
     headers = {
         'x-apikey': api_key
@@ -42,11 +41,27 @@ def consultar_virustotal(hash):
     else:
         print('Erro ao fazer a consulta.')
 
+def write_file(filename, ext, results):
+    if ext == "json":
+        with open(filename, "w") as arquivo:
+            json.dump(results, arquivo, indent=4)
+        print("Arquivo salvo com sucesso!")
+        return
+    
+    with open(filename, "w") as arquivo:
+        for result in results:
+            arquivo.write(f"Hash: {result['hash']}\n")
+            arquivo.write(f"{result['score']}\n")
+            arquivo.write("Detalhes adicionais:\n")
+            for key, value in result['details'].items():
+                arquivo.write(f"{key}: {value}\n")
+            arquivo.write("\n")
+    print("Arquivo salvo com sucesso!")
 
 # Loop principal
 try:
-    while True:
-        print('''
+
+    print('''
 ██╗   ██╗████████╗███████╗███████╗ █████╗ ██████╗  ██████╗██╗  ██╗
 ██║   ██║╚══██╔══╝██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝██║  ██║
 ██║   ██║   ██║   ███████╗█████╗  ███████║██████╔╝██║     ███████║
@@ -56,46 +71,61 @@ try:
                                                                   
      Created by: @caiquebarqueta (LinkedIn) @crocodylii (Twitter)                                                                         
     ''')
+    
+    # Insira sua chave de API do VirusTotal aqui ou utilize o comando -k na linha de comando
+    api_key = 'XXXX'
+
+    parser = argparse.ArgumentParser(description='Scan automatizado de hashs utilizando o banco de dados do virus total.')
+    parser.add_argument('-f', '--file', help='fornece um arquivo de texto com hashs para serem pesquisadas, o arquivo deve conter um hash por linha.')
+    parser.add_argument('-o', '--output', help='fornece um arquivo de output para salvar os resultados, arquivo deve ser .txt ou .json')
+    parser.add_argument('-k', '--apikey', help='substitui a apikey salva hardcoded por a apikey fornecida')
+    args = parser.parse_args()
+    if args.apikey:
+        api_key = args.apikey
+    if args.file:
+        path = Path(args.file)
+        if path.exists() and path.is_file():
+            file_contents = path.read_text()
+            hash_list = file_contents.split('\n')
+        else:
+            print("arquivo invalido")
+            exit()
+    else:
         hashes = input('Insira as hashes separadas por vírgula (MD5, SHA1 ou SHA256) [ou "sair" para encerrar]: ')
         if hashes.lower() == 'sair':
-            break
-
+            exit()
         hash_list = hashes.split(',')
+        
+    results = []
+    for index, hash in enumerate(hash_list, start=1):
+        result = consultar_virustotal(hash.strip())
+        if result:
+            score, details = result
+            results.append({"hash": hash.strip(), "score": score, "details": details})
+        print('\n')
 
-        results = []
-        for index, hash in enumerate(hash_list, start=1):
-            result = consultar_virustotal(hash.strip())
-            if result:
-                score, details = result
-                results.append({"hash": hash.strip(), "score": score, "details": details})
-            print('\n')
+        # Aguardar 1 minuto e 30 segundos a cada grupo de 4 requisições
+        if index % 4 == 0 and index < len(hash_list):
+            print("Aguardando 1 minuto e 30 segundos...")
+            time.sleep(90)
 
-            # Aguardar 1 minuto e 30 segundos a cada grupo de 4 requisições
-            if index % 4 == 0 and index < len(hash_list):
-                print("Aguardando 1 minuto e 30 segundos...")
-                time.sleep(90)
-
+    if args.output:
+        path = Path(args.output)
+        ext = path.suffix
+        ext = ext.replace(".", "", -1)
+        if ext != "json" and ext != "txt":
+            print("Extensão de arquivo inválida. O arquivo não foi salvo.")
+            exit()
+        write_file(path, ext, results)
+    else:
         # Salvar a saída em um arquivo
         extensao = input("Digite a extensão do arquivo (txt ou json): ")
-
-        if extensao == "txt":
-            nome_arquivo = input("Digite o nome do arquivo: ") + ".txt"
-            with open(nome_arquivo, "w") as arquivo:
-                for result in results:
-                    arquivo.write(f"Hash: {result['hash']}\n")
-                    arquivo.write(f"{result['score']}\n")
-                    arquivo.write("Detalhes adicionais:\n")
-                    for key, value in result['details'].items():
-                        arquivo.write(f"{key}: {value}\n")
-                    arquivo.write("\n")
-            print("Arquivo salvocom sucesso!")
-        elif extensao == "json":
-            nome_arquivo = input("Digite o nome do arquivo: ") + ".json"
-            with open(nome_arquivo, "w") as arquivo:
-                json.dump(results, arquivo, indent=4)
-            print("Arquivo salvo com sucesso!")
-        else:
+        nome_arquivo = input("Digite o nome do arquivo: ")
+        filename = nome_arquivo + "." + extensao
+        if extensao != "json" and extensao != "txt":
             print("Extensão de arquivo inválida. O arquivo não foi salvo.")
+            exit()
+        write_file(filename, extensao, results)
 
     print('Programa encerrado.')
     input("Pressione Enter para sair...")
